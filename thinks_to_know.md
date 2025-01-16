@@ -50,3 +50,16 @@ Yes,
 -**Statelessness: Each request contains all the information needed to process it.
 -**Resource Identification: Using URIs to identify resources.
 -**In essence, RESTful APIs follow these rules to maintain clarity, predictability, and adherence to web standards
+
+
+--**Create (Storing Data): ------json.dumps()---------
+      You use json.dump() or json.dumps() to serialize your Python data (e.g., a list or dictionary) into a JSON string and save it to a file or store it in a database (like Redis).
+
+
+--**Retrieve (Reading Data):------json.load()------
+
+ You use json.load() or json.loads() to deserialize the JSON string back into a Python object, so you can use it in your program.
+
+
+ json.dumps() is used when you store or set data as a JSON string (for example, in Redis).     ----> json.dumps() to set (store) data.
+ json.loads() is used when you retrieve or get data and want to convert the JSON string back into a Python object.    ---->json.loads() to get (retrieve) and parse data.
