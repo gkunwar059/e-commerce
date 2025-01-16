@@ -2,12 +2,11 @@ import redis
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Mapped, Session, mapped_column, sessionmaker
+from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
 # SQLAlchemy setup
 DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/test-redis-database"
-Base = declarative_base()
 engine = create_engine(url=DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -17,6 +16,12 @@ redis_client = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
 # FastAPI app
 app = FastAPI()
+
+
+class Base(DeclarativeBase):
+    @declared_attr.directive
+    def __tablename__(cls) -> str:
+        return cls.__name__.lower()
 
 
 # Dependency to get DB session
@@ -29,9 +34,8 @@ def get_db():
 
 
 class User(Base):
-    __tablename__ = "users"  # TODO: REMOVE THIS TABLE_NAME
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    name: Mapped[str]
+    name: Mapped[str] = mapped_column(index=True)
     email: Mapped[str] = mapped_column(unique=True, index=True)
     phone_number: Mapped[str] = mapped_column(unique=True, index=True)
 
