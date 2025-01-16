@@ -45,9 +45,10 @@ class UserSchema(BaseModel):
     phone_number: str
 
 
-@app.get("/")
-async def root():
-    return {"msg": "Hello World!"}
+@app.get("/users/")
+def get_users(db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    return users
 
 
 @app.post("/users", status_code=201)
@@ -75,9 +76,3 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     db.query(User).filter_by(id=user_id).delete()
     db.commit()
     return {"msg": "User deleted successfully"}
-
-
-@app.get("/users/")
-def get_users(db: Session = Depends(get_db)):
-    users = db.query(User).all()
-    return users
