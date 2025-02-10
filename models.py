@@ -1,6 +1,8 @@
 from sqlalchemy import ForeignKey
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.ext.hybrid import hybrid_property
+
 
 from db import engine
 
@@ -39,7 +41,7 @@ class Product(Base):
     quantity: Mapped[int]
     category_id: Mapped[int] = mapped_column(ForeignKey("category.id"))
     orders: Mapped[list["Order"]] = relationship(
-        secondary="product_order", back_populates="products"
+        secondary="productorder", back_populates="products"
     )
 
     category: Mapped["Category"] = relationship(back_populates="products")
@@ -55,13 +57,15 @@ class Order(Base):
     quantity: Mapped[int]
 
     user: Mapped["User"] = relationship(back_populates="orders")
-    product: Mapped[list["Product"]] = relationship(
-        back_populates="orders", secondary="product_order"
+    products: Mapped[list["Product"]] = relationship(
+        back_populates="orders", secondary="productorder"
     )
 
-    #hybrid property for the total price of the order
-    #total_price
+    @hybrid_property
+    def total_price(self):
+        return sum(product.price for product in self.product)
 
+    # EXPRESSION WILL HANDLE LATER ON IN THE CODE
 
 
 class ProductOrder(Base):
@@ -86,10 +90,6 @@ class CartItem(Base):
     quantity: Mapped[int]
     cart: Mapped["Cart"] = relationship(back_populates="cart_items")
     product: Mapped["Product"] = relationship(back_populates="cart_items")
-
-    #examples
-    #total price of the cart items price and quantity
-    #total_price
 
 
 Base.metadata.create_all(bind=engine)

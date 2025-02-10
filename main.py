@@ -1,13 +1,15 @@
-from fastapi import Depends, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
 from db import get_db
-from models import User
-from schemas import UserSchema
-
-from fastapi import FastAPI
+from models import Category, Product, User
+from schemas import CategorySchema, ProductSchema, UserSchema
 
 app = FastAPI()
+
+"""
+CRUD OPERATION OF USER
+"""
 
 
 @app.get("/users/")
@@ -46,3 +48,46 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     db.query(User).filter_by(id=user_id).delete()
     db.commit()
     return {"msg": "User deleted successfully"}
+
+
+@app.get("/users/{user_id}")
+def get_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter_by(id=user_id).first()
+    return user
+
+
+"""
+CRUD OPERATION OF PRODUCT & CATEGORY
+"""
+
+
+@app.get("/categories/")
+def get_categories(db: Session = Depends(get_db)):
+    categories = db.query(Category).all()
+    return categories
+
+
+@app.post("/categories", status_code=201, response_model=CategorySchema)
+def create_category(body: CategorySchema, db: Session = Depends(get_db)):
+    new_category = body.model_dump(exclude_unset=True)
+
+    category = Category(**new_category)
+    db.add(category)
+    db.commit()
+    return category
+
+
+@app.get("/products/")
+def get_products(db: Session = Depends(get_db)):
+    products = db.query(Product).all()
+    return products
+
+
+@app.post("/products", status_code=201, response_model=ProductSchema)
+def create_product(body: ProductSchema, db: Session = Depends(get_db)):
+    new_product = body.model_dump(exclude_unset=True)
+
+    product = Product(**new_product)
+    db.add(product)
+    db.commit()
+    return product
