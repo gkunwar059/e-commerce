@@ -1,52 +1,13 @@
-import redis
-from fastapi import Depends, FastAPI, HTTPException
-from pydantic import BaseModel, EmailStr
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
+from fastapi import Depends, HTTPException
+from sqlalchemy.orm import Session
 
-# SQLAlchemy setup
-DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/test-redis-database"
-engine = create_engine(url=DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+from db import get_db
+from models import User
+from schemas import UserSchema
 
-# Redis setup
-redis_client = redis.Redis(host="localhost", port=6379, decode_responses=True)
+from fastapi import FastAPI
 
-
-# FastAPI app
 app = FastAPI()
-
-
-class Base(DeclarativeBase):
-    @declared_attr.directive
-    def __tablename__(cls) -> str:
-        return cls.__name__.lower()
-
-
-# Dependency to get DB session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-class User(Base):
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(index=True)
-    email: Mapped[str] = mapped_column(unique=True, index=True)
-    phone_number: Mapped[str] = mapped_column(unique=True, index=True)
-
-
-Base.metadata.create_all(bind=engine)
-
-
-class UserSchema(BaseModel):
-    name: str
-    email: EmailStr
-    phone_number: str
 
 
 @app.get("/users/")
@@ -55,12 +16,17 @@ def get_users(db: Session = Depends(get_db)):
     return users
 
 
-@app.post("/users", status_code=201)
+@app.post("/users", status_code=201, response_model=UserSchema)
 def create_user(body: UserSchema, db: Session = Depends(get_db)):
-    user = User(body.model_dump(exclude_unset=True))
+    new_user = body.model_dump(exclude_unset=True)
+
+    user = User(**new_user)
+    if user.email in [user.email for user in db.query(User).all()]:
+        raise HTTPException(status_code=400, detail="Email already exists")
     db.add(user)
     db.commit()
-    return {"msg": "User created successfully"}
+
+    return user
 
 
 @app.patch("/users/{user_id}")
