@@ -27,7 +27,6 @@ def create_user(body: UserSchema, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already exists")
     db.add(user)
     db.commit()
-
     return user
 
 
@@ -67,6 +66,32 @@ def get_categories(db: Session = Depends(get_db)):
     return categories
 
 
+@app.get("/categories/{category_id}")
+def get_category(category_id: int, db: Session = Depends(get_db)):
+    category = db.query(Category).filter_by(id=category_id).first()
+    return category
+
+
+@app.patch("/categories/{category_id}")
+def update_category(
+    category_id: int, body: CategorySchema, db: Session = Depends(get_db)
+):
+    category = db.query(Category).filter_by(id=category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    update_category = body.model_dump(exclude_unset=True)
+    db.query(Category).filter_by(id=category_id).update(update_category)
+    db.commit()
+    return {"msg": "Category updated successfully"}
+
+
+@app.delete("/categories/{category_id}")
+def delete_category(category_id: int, db: Session = Depends(get_db)):
+    db.query(Category).filter_by(id=category_id).delete()
+    db.commit()
+    return {"msg": "Category deleted successfully"}
+
+
 @app.post("/categories", status_code=201, response_model=CategorySchema)
 def create_category(body: CategorySchema, db: Session = Depends(get_db)):
     new_category = body.model_dump(exclude_unset=True)
@@ -83,6 +108,12 @@ def get_products(db: Session = Depends(get_db)):
     return products
 
 
+@app.get("/products/{product_id}")
+def get_product(product_id: int, db: Session = Depends(get_db)):
+    product = db.query(Product).filter_by(id=product_id).first()
+    return product
+
+
 @app.post("/products", status_code=201, response_model=ProductSchema)
 def create_product(body: ProductSchema, db: Session = Depends(get_db)):
     new_product = body.model_dump(exclude_unset=True)
@@ -91,3 +122,21 @@ def create_product(body: ProductSchema, db: Session = Depends(get_db)):
     db.add(product)
     db.commit()
     return product
+
+
+@app.patch("/products/{product_id}")
+def update_product(product_id: int, body: ProductSchema, db: Session = Depends(get_db)):
+    product = db.query(Product).filter_by(id=product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    update_product = body.model_dump(exclude_unset=True)
+    db.query(Product).filter_by(id=product_id).update(update_product)
+    db.commit()
+    return {"msg": "Product updated successfully"}
+
+
+@app.delete("/products/{product_id}")
+def delete_product(product_id: int, db: Session = Depends(get_db)):
+    db.query(Product).filter_by(id=product_id).delete()
+    db.commit()
+    return {"msg": "Product deleted successfully"}

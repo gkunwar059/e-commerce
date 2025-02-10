@@ -13,5 +13,6 @@ class ProductSchema(BaseModel):
     quantity: int
     category_id: int
 
+
 class CategorySchema(BaseModel):
     name: str
