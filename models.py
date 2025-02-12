@@ -1,8 +1,7 @@
 from sqlalchemy import ForeignKey
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
-
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from db import engine
 
@@ -54,8 +53,6 @@ class Product(Base):
 class Order(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
-    quantity: Mapped[int]
-
     user: Mapped["User"] = relationship(back_populates="orders")
     products: Mapped[list["Product"]] = relationship(
         back_populates="orders", secondary="productorder"
@@ -72,6 +69,8 @@ class ProductOrder(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     product_id: Mapped[int] = mapped_column(ForeignKey("product.id"), primary_key=True)
     order_id: Mapped[int] = mapped_column(ForeignKey("order.id"), primary_key=True)
+    quantity: Mapped[int]
+
 
 
 class Cart(Base):

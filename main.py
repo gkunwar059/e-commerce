@@ -59,7 +59,6 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 CRUD OPERATION OF PRODUCT & CATEGORY
 """
 
-
 @app.get("/categories/")
 def get_categories(db: Session = Depends(get_db)):
     categories = db.query(Category).all()
@@ -140,3 +139,5 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     db.query(Product).filter_by(id=product_id).delete()
     db.commit()
     return {"msg": "Product deleted successfully"}
+
+
